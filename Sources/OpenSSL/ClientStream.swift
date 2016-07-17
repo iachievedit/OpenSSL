@@ -23,6 +23,7 @@
 // SOFTWARE.
 
 import COpenSSL
+import Foundation
 
 public final class SSLClientStream: Stream {
 	private let context: SSLClientContext
@@ -64,14 +65,20 @@ public final class SSLClientStream: Stream {
         
         var decryptedData = Data()
         
+        let start = NSDate()
         while true {
             do {
                 decryptedData += try ssl.read(upTo:byteCount)
+                let end   = NSDate()
                 if decryptedData.count > 0 {
+                    print("1: \(end.timeIntervalSince(start))")
                     return decryptedData
                 }
             } catch Session.Error.WantRead {
                 if decryptedData.count > 0 {
+                    let end   = NSDate()
+                    print("2: \(end.timeIntervalSince(start))")
+
                     return decryptedData
                 }
                 
@@ -81,9 +88,17 @@ public final class SSLClientStream: Stream {
                     print("Got \(data.count) bytes from that")
                     try readIO.write(data)
                 } catch StreamError.closedStream(let _data) {
+                    let end   = NSDate()
+
+                    print("3: \(end.timeIntervalSince(start))")
+
                     return decryptedData + _data
                 }
             } catch Session.Error.ZeroReturn {
+                let end   = NSDate()
+
+                print("4: \(end.timeIntervalSince(start))")
+
                 return decryptedData
             }
         }
