@@ -51,41 +51,41 @@ public final class SSLClientStream: Stream {
 
 		ssl.setConnectState()
 	}
-
-	public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
-	    let data: Data
-	    do {
-		data = try rawStream.receive(upTo: byteCount, timingOut: deadline)
-	    } catch StreamError.closedStream(let _data) {
-		data = _data
-	    }
-            
-	    try readIO.write(data)
-            
-	    var decryptedData = Data()
-            
-	    while true {
-		do {
-		    decryptedData += try ssl.read(upTo:byteCount)
-                    if decryptedData.count > 0 {
-                        return decryptedData
-                    }
-		} catch Session.Error.WantRead {
-		    if decryptedData.count > 0 {
-			return decryptedData
-		    }
-                    
-		    do {
-			let data = try rawStream.receive(upTo: byteCount, timingOut: deadline)
-			try readIO.write(data)
-		    } catch StreamError.closedStream(let _data) {
-			return decryptedData + _data
-		    }
-		} catch Session.Error.ZeroReturn {
-		    return decryptedData
-		}
-	    }
-	}
+    
+    public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
+        let data: Data
+        do {
+            data = try rawStream.receive(upTo: byteCount, timingOut: deadline)
+        } catch StreamError.closedStream(let _data) {
+            data = _data
+        }
+        
+        try readIO.write(data)
+        
+        var decryptedData = Data()
+        
+        while true {
+            do {
+                decryptedData += try ssl.read(upTo:byteCount)
+                if decryptedData.count > 0 {
+                    return decryptedData
+                }
+            } catch Session.Error.WantRead {
+                if decryptedData.count > 0 {
+                    return decryptedData
+                }
+                
+                do {
+                    let data = try rawStream.receive(upTo:DEFAULT_BUFFER_SIZE, timingOut: deadline)
+                    try readIO.write(data)
+                } catch StreamError.closedStream(let _data) {
+                    return decryptedData + _data
+                }
+            } catch Session.Error.ZeroReturn {
+                return decryptedData
+            }
+        }
+    }
 
 	public func send(_ data: Data, timingOut deadline: Double) throws {
 		loop: while !ssl.initializationFinished {
