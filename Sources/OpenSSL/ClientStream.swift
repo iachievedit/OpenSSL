@@ -54,6 +54,7 @@ public final class SSLClientStream: Stream {
 	}
     
     public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
+        /*
         let data: Data
         do {
             data = try rawStream.receive(upTo: DEFAULT_BUFFER_SIZE, timingOut: deadline)
@@ -62,7 +63,7 @@ public final class SSLClientStream: Stream {
         }
         
         try readIO.write(data)
-        
+        */
         var decryptedData = Data()
         
         let start = NSDate()
