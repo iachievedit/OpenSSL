@@ -76,6 +76,7 @@ public final class SSLClientStream: Stream {
                 }
                 
                 do {
+                    print("try to get a lot of data")
                     let data = try rawStream.receive(upTo:DEFAULT_BUFFER_SIZE, timingOut: deadline)
                     try readIO.write(data)
                 } catch StreamError.closedStream(let _data) {
