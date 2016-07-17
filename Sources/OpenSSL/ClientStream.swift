@@ -56,7 +56,7 @@ public final class SSLClientStream: Stream {
     public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
         let data: Data
         do {
-            data = try rawStream.receive(upTo: byteCount, timingOut: deadline)
+            data = try rawStream.receive(upTo: DEFAULT_BUFFER_SIZE, timingOut: deadline)
         } catch StreamError.closedStream(let _data) {
             data = _data
         }
