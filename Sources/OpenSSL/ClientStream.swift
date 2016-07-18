@@ -54,52 +54,26 @@ public final class SSLClientStream: Stream {
 	}
     
     public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
-        /*
-        let data: Data
-        do {
-            data = try rawStream.receive(upTo: DEFAULT_BUFFER_SIZE, timingOut: deadline)
-        } catch StreamError.closedStream(let _data) {
-            data = _data
-        }
-        
-        try readIO.write(data)
-        */
         var decryptedData = Data()
         
-        let start = NSDate()
         while true {
             do {
                 decryptedData += try ssl.read(upTo:byteCount)
-                let end   = NSDate()
                 if decryptedData.count > 0 {
-                    print("1: \(end.timeIntervalSince(start))")
                     return decryptedData
                 }
             } catch Session.Error.WantRead {
                 if decryptedData.count > 0 {
-                    let end   = NSDate()
-                    print("2: \(end.timeIntervalSince(start))")
-
                     return decryptedData
                 }
                 
                 do {
-                    print("try to get a lot of data")
                     let data = try rawStream.receive(upTo:DEFAULT_BUFFER_SIZE, timingOut: deadline)
-                    print("Got \(data.count) bytes from that")
                     try readIO.write(data)
                 } catch StreamError.closedStream(let _data) {
-                    let end   = NSDate()
-
-                    print("3: \(end.timeIntervalSince(start))")
-
                     return decryptedData + _data
                 }
             } catch Session.Error.ZeroReturn {
-                let end   = NSDate()
-
-                print("4: \(end.timeIntervalSince(start))")
-
                 return decryptedData
             }
         }
