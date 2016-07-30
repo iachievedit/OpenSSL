@@ -1,4 +1,4 @@
-// OpenSSL.swift
+// Server.swift
 //
 // The MIT License (MIT)
 //
@@ -22,22 +22,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-@_exported import File
+import C7
 import COpenSSL
 
-public let DEFAULT_BUFFER_SIZE = 4096
-
-public struct OpenSSL {
-	private static var _initialize: Void = {
-		SSL_library_init()
-		SSL_load_error_strings()
-		ERR_load_crypto_strings()
-		OPENSSL_config(nil)
-	}()
-
-	public static func initialize() {
-		_ = _initialize
+public struct SSLServer: Host {
+	public let server: Host
+	public let context: Context
+	
+	public init(server: Host, context: Context) throws {
+		self.server = server
+		self.context = context
+	}
+	
+	public func accept(timingOut deadline: Double) throws -> Stream {
+		let stream = try server.accept(timingOut: deadline)
+		let connection = try SSLConnection(context: context, rawStream: stream)
+		try connection.open(timingOut: deadline)
+		return connection
 	}
 }
-
-let SSL_CTRL_SET_ECDH_AUTO: Int32 = 94

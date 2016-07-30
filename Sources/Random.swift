@@ -1,4 +1,4 @@
-// SHA256.swift
+// Random.swift
 //
 // The MIT License (MIT)
 //
@@ -22,29 +22,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#if os(OSX) || os(iOS) || os(tvOS) || os(watchOS)
+	import Darwin
+#elseif os(Linux)
+	import Glibc
+#endif
+
+import C7
 import COpenSSL
 
-public class SHA256 {
-    let context:  UnsafeMutablePointer<SHA256_CTX>!
+public class Random {
+	
+	public enum Error: ErrorProtocol {
+		case error(description: String)
+	}
+	
+	public static func number(max: Int = Int(UInt32.max)) -> Int {
+		#if os(OSX) || os(iOS) || os(tvOS) || os(watchOS)
+			return Int(arc4random_uniform(UInt32(max)))
+		#elseif os(Linux)
+			return Int(random() % (max + 1))
+		#endif
+	}
+	
+	public static func bytes(_ size: Int) throws -> Data {
+		var buf = Data.buffer(with: size)
+		guard (buf.withUnsafeMutableBufferPointer{ RAND_bytes($0.baseAddress, Int32($0.count)) }) == 1 else {
+			throw Error.error(description: lastSSLErrorDescription)
+		}
+		return buf
+	}
 
-    deinit {
-        context.deallocateCapacity(1)
-    }
-
-    public init() {
-        let context = UnsafeMutablePointer<SHA256_CTX>(allocatingCapacity: 1)
-        SHA256_Init(context)
-        self.context = context
-    }
-
-    public func update(_ data: Data) {
-        var data = data
-        SHA256_Update(context, &data.bytes, data.count)
-    }
-
-    public func final() -> Data {
-        var hash = Data.buffer(with: Int(SHA256_DIGEST_LENGTH))
-        SHA256_Final(&hash.bytes, context)
-        return hash
-    }
 }

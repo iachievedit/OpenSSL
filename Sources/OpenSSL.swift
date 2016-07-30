@@ -1,4 +1,4 @@
-// Random.swift
+// OpenSSL.swift
 //
 // The MIT License (MIT)
 //
@@ -24,17 +24,12 @@
 
 import COpenSSL
 
-public struct Random {
-	public enum Error: ErrorProtocol {
-		case Error(description: String)
-	}
+private var initialized = false
 
-	public static func getBytes(_ size: Int) throws -> Data {
-		var buf = Data.buffer(with: size)
-		guard (buf.withUnsafeMutableBufferPointer{ RAND_bytes($0.baseAddress, Int32($0.count)) }) == 1 else {
-			throw Error.Error(description: lastSSLErrorDescription)
-		}
-		return buf
-	}
-
+public func initialize() {
+	guard !initialized else { return }
+	SSL_library_init()
+	SSL_load_error_strings()
+	ERR_load_crypto_strings()
+	OPENSSL_config(nil)
 }
